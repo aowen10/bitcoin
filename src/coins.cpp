@@ -41,17 +41,20 @@ size_t CCoinsViewCache::DynamicMemoryUsage() const {
 CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const {
 
     /* I've added code to time this function and print it to a time_log.txt file */
-    std::chrono::time_point<std::chrono::system_clock> start, stop;
-    start = std::chrono::high_resolution_clock::now();
+    //std::chrono::time_point<std::chrono::system_clock> start, stop;
+    //start = std::chrono::high_resolution_clock::now();
+    int64_t start = GetTimeMicros();
 
     CCoinsMap::iterator it = cacheCoins.find(outpoint);
     if (it != cacheCoins.end())
-        stop = std::chrono::high_resolution_clock::now();
+        //stop = std::chrono::high_resolution_clock::now();
+        int64_t stop = GetTimeMicros();
     	Log(start, stop, true);
         return it;
     Coin tmp;
     if (!base->GetCoin(outpoint, tmp))
-        stop = std::chrono::high_resolution_clock::now();
+        //stop = std::chrono::high_resolution_clock::now();
+        int64_t stop = GetTimeMicros();
     	Log(start, stop, false);
         return cacheCoins.end();
     CCoinsMap::iterator ret = cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(outpoint), std::forward_as_tuple(std::move(tmp))).first;
@@ -61,22 +64,24 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const 
         ret->second.flags = CCoinsCacheEntry::FRESH;
     }
     cachedCoinsUsage += ret->second.coin.DynamicMemoryUsage();
-    stop = std::chrono::high_resolution_clock::now();
+    //stop = std::chrono::high_resolution_clock::now();
+    int64_t stop = GetTimeMicros();
     Log(start, stop, false);
     return ret;
 }
 
-void CCoinsViewCache::Log( std::chrono::time_point<std::chrono::system_clock> start,  std::chrono::time_point<std::chrono::system_clock> stop, bool hit) {
-		auto duration = std::chrono::duration_cast<microseconds>(stop - start);
+void CCoinsViewCache::Log( int64_t start,  int64_t stop, bool hit) {
+		//auto duration = std::chrono::duration_cast<microseconds>(stop - start);
+        int64_t duration = stop - start;
 
-	    ofstream time_log;
-	    time_log.open ("time_log.txt", ios::out | ios::app);
+	    std::ofstream time_log;
+	    time_log.open ("time_log.txt", std::ios::out | std::ios::app);
 	    if (time_log.is_open())
 	    {
 	    	if (hit) {
-	    		time_log << "Fetch Coin duration: " + duration.count() + " microseconds hit" << endl;
+	    		time_log << "Fetch Coin duration: " << duration << " microseconds hit" << std::endl;
 	    	} else {
-	    		time_log << "Fetch Coin duration: " + duration.count() + " microseconds miss" << endl;
+	    		time_log << "Fetch Coin duration: " << duration << " microseconds miss" << std::endl;
 	    	}
 
 	        time_log.close();

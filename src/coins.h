@@ -297,6 +297,8 @@ public:
     //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
     bool HaveInputs(const CTransaction& tx) const;
 
+    void Log( int64_t start,  int64_t stop, bool hit);
+
 private:
     CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
 };
