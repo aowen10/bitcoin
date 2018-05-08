@@ -19,6 +19,10 @@
 
 #include <unordered_map>
 
+#include <iostream>
+#include <fstream>
+#include <chrono>
+
 /**
  * A UTXO entry.
  *
