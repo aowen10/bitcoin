@@ -44,17 +44,18 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const 
     //std::chrono::time_point<std::chrono::system_clock> start, stop;
     //start = std::chrono::high_resolution_clock::now();
     int64_t start = GetTimeMicros();
+    int64_t stop = 0;
 
     CCoinsMap::iterator it = cacheCoins.find(outpoint);
     if (it != cacheCoins.end())
         //stop = std::chrono::high_resolution_clock::now();
-        int64_t stop = GetTimeMicros();
+        stop = GetTimeMicros();
     	Log(start, stop, true);
         return it;
     Coin tmp;
     if (!base->GetCoin(outpoint, tmp))
         //stop = std::chrono::high_resolution_clock::now();
-        int64_t stop = GetTimeMicros();
+        stop = GetTimeMicros();
     	Log(start, stop, false);
         return cacheCoins.end();
     CCoinsMap::iterator ret = cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(outpoint), std::forward_as_tuple(std::move(tmp))).first;
@@ -65,12 +66,12 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const 
     }
     cachedCoinsUsage += ret->second.coin.DynamicMemoryUsage();
     //stop = std::chrono::high_resolution_clock::now();
-    int64_t stop = GetTimeMicros();
+    stop = GetTimeMicros();
     Log(start, stop, false);
     return ret;
 }
 
-void CCoinsViewCache::Log( int64_t start,  int64_t stop, bool hit) {
+void CCoinsViewCache::Log( int64_t start,  int64_t stop, bool hit) const {
 		//auto duration = std::chrono::duration_cast<microseconds>(stop - start);
         int64_t duration = stop - start;
 
