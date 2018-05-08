@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <coins.h>
+#include <utiltime.h>
 
 #include <consensus/consensus.h>
 #include <random.h>
@@ -42,13 +43,16 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const 
     /* I've added code to time this function and print it to a time_log.txt file */
     std::chrono::time_point<std::chrono::system_clock> start, stop;
     start = std::chrono::high_resolution_clock::now();
+
     CCoinsMap::iterator it = cacheCoins.find(outpoint);
     if (it != cacheCoins.end())
         stop = std::chrono::high_resolution_clock::now();
+    	Log(start, stop, true);
         return it;
     Coin tmp;
     if (!base->GetCoin(outpoint, tmp))
         stop = std::chrono::high_resolution_clock::now();
+    	Log(start, stop, false);
         return cacheCoins.end();
     CCoinsMap::iterator ret = cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(outpoint), std::forward_as_tuple(std::move(tmp))).first;
     if (ret->second.coin.IsSpent()) {
@@ -58,17 +62,25 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const 
     }
     cachedCoinsUsage += ret->second.coin.DynamicMemoryUsage();
     stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<microseconds>(stop - start);
-
-    ofstream time_log;
-    time_log.open ("time_log.txt", ios::out | ios::app);
-    if (time_log.is_open())
-    {
-        time_log << "Fetch Coin duration: " + duration.count() + " microseconds" << endl;
-        
-        time_log.close();
-    }
+    Log(start, stop, false);
     return ret;
+}
+
+void CCoinsViewCache::Log( std::chrono::time_point<std::chrono::system_clock> start,  std::chrono::time_point<std::chrono::system_clock> stop, bool hit) {
+		auto duration = std::chrono::duration_cast<microseconds>(stop - start);
+
+	    ofstream time_log;
+	    time_log.open ("time_log.txt", ios::out | ios::app);
+	    if (time_log.is_open())
+	    {
+	    	if (hit) {
+	    		time_log << "Fetch Coin duration: " + duration.count() + " microseconds hit" << endl;
+	    	} else {
+	    		time_log << "Fetch Coin duration: " + duration.count() + " microseconds miss" << endl;
+	    	}
+
+	        time_log.close();
+	    }
 }
 
 bool CCoinsViewCache::GetCoin(const COutPoint &outpoint, Coin &coin) const {
