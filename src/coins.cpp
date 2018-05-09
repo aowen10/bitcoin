@@ -49,14 +49,14 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const 
     CCoinsMap::iterator it = cacheCoins.find(outpoint);
     if (it != cacheCoins.end())
         //stop = std::chrono::high_resolution_clock::now();
-        stop = GetTimeMicros();
-    	Log(start, stop, true);
+        //stop = GetTimeMicros();
+    	Log(start, GetTimeMicros(), true);
         return it;
     Coin tmp;
     if (!base->GetCoin(outpoint, tmp))
         //stop = std::chrono::high_resolution_clock::now();
-        stop = GetTimeMicros();
-    	Log(start, stop, false);
+        //stop = GetTimeMicros();
+    	Log(start, GetTimeMicros(), false);
         return cacheCoins.end();
     CCoinsMap::iterator ret = cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(outpoint), std::forward_as_tuple(std::move(tmp))).first;
     if (ret->second.coin.IsSpent()) {
@@ -66,8 +66,8 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const 
     }
     cachedCoinsUsage += ret->second.coin.DynamicMemoryUsage();
     //stop = std::chrono::high_resolution_clock::now();
-    stop = GetTimeMicros();
-    Log(start, stop, false);
+    //stop = GetTimeMicros();
+    Log(start, GetTimeMicros(), false);
     return ret;
 }
 
@@ -80,8 +80,12 @@ void CCoinsViewCache::Log( int64_t start,  int64_t stop, bool hit) const {
 	    if (time_log.is_open())
 	    {
 	    	if (hit) {
+                time_log << "Start value: " << start << std::endl;
+                time_log << "End value: " << stop << std::endl;
 	    		time_log << "Fetch Coin duration: " << duration << " microseconds hit" << std::endl;
 	    	} else {
+                time_log << "Start value: " << start << std::endl;
+                time_log << "End value: " << stop << std::endl;
 	    		time_log << "Fetch Coin duration: " << duration << " microseconds miss" << std::endl;
 	    	}
 
