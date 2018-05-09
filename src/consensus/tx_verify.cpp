@@ -216,8 +216,24 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     CAmount nValueIn = 0;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const COutPoint &prevout = tx.vin[i].prevout;
+        std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
         const Coin& coin = inputs.AccessCoin(prevout);
+        std::chrono::system_clock::time_point stop = std::chrono::system_clock::now();
+        long duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count();
+
         assert(!coin.IsSpent());
+        std::ofstream time_log;
+        time_log.open ("time_log.txt", std::ios::out | std::ios::app);
+
+        if (time_log.is_open())
+        {
+        	time_log << "AC d: " << duration << "us" << std::endl;
+        	time_log.close();
+        } else {
+
+        }
+
+
 
         // If prev is coinbase, check that it's matured
         if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
