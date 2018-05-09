@@ -2246,6 +2246,13 @@ void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainPar
       log(pindexNew->nChainWork.getdouble())/log(2.0), (unsigned long)pindexNew->nChainTx,
       FormatISO8601DateTime(pindexNew->GetBlockTime()),
       GuessVerificationProgress(chainParams.TxData(), pindexNew), pcoinsTip->DynamicMemoryUsage() * (1.0 / (1<<20)), pcoinsTip->GetCacheSize());
+      std::ofstream time_log;
+      time_log.open ("time_log.txt", std::ios::out | std::ios::app);
+    	if (time_log.is_open())
+    	{
+    	    time_log << "ProcessedBlock "<< FormatISO8601DateTime(pindexNew->GetBlockTime()) << " " << pcoinsTip->GetCacheSize() << std::endl;
+    	    time_log.close();
+    	}
     if (!warningMessages.empty())
         LogPrintf(" warning='%s'", boost::algorithm::join(warningMessages, ", ")); /* Continued */
     LogPrintf("\n");
